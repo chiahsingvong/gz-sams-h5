@@ -1,0 +1,11 @@
+# System files
+.DS_Store
+*.log
+nohup.out
+
+# Local server files
+server.log
+
+# Temporary files
+/tmp/
+.gemini/
