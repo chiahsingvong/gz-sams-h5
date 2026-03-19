@@ -9,3 +9,6 @@ server.log
 # Temporary files
 /tmp/
 .gemini/
+.vercel
+.env*.local
+.wrangler/
