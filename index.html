@@ -11,7 +11,7 @@
   <style>
     /* ===== Reset & Base ===== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #060e3c; }
+    html, body { width: 100%; height: 100%; background: #060e3c; }
     body { font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; color: white; }
 
     /* ===== CSS Variables ===== */
@@ -25,9 +25,8 @@
     /* ===== Scroll Container ===== */
     #scroll-container {
       width: 100%;
-      height: 100%;
-      overflow-y: scroll;
-      scroll-snap-type: y mandatory;
+      min-height: 100%;
+      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
     }
@@ -36,9 +35,7 @@
     /* ===== Screen Base ===== */
     .screen {
       width: 100%;
-      height: 100svh;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
+      min-height: 100svh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -73,12 +70,16 @@
     /* ===== SCREEN 1: Hero ===== */
     #screen-1 {
       background: #060e3c;
-      justify-content: space-between;
+      justify-content: center;
+      height: 100svh;
+      min-height: auto;
     }
     .hero-bg {
       position: absolute;
-      inset: 0;
+      top: 0; left: 0; right: 0;
+      height: 80%;
       z-index: 0;
+      overflow: hidden;
     }
     .hero-bg img {
       width: 100%; height: 100%;
@@ -86,7 +87,7 @@
       object-position: center top;
       opacity: 0.55;
     }
-    /* dark overlay */
+    /* dark overlay + bottom fade to screen bg color */
     .hero-bg::after {
       content: '';
       position: absolute;
@@ -94,9 +95,10 @@
       background: linear-gradient(
         180deg,
         rgba(6,14,60,0.6) 0%,
-        rgba(6,14,60,0.25) 40%,
-        rgba(6,14,60,0.55) 75%,
-        rgba(6,14,60,0.95) 100%
+        rgba(6,14,60,0.25) 35%,
+        rgba(6,14,60,0.3) 60%,
+        rgba(6,14,60,0.7) 85%,
+        #060e3c 100%
       );
     }
 
@@ -176,82 +178,210 @@
     }
     .hero-tag i { font-size: 14px; opacity: 1; text-shadow: none; color: white; }
 
-    /* Product carousel */
-    .product-carousel-wrapper {
-      position: relative;
+    /* Map peek at bottom of hero - directly shows the map */
+    .map-peek {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 25vh;
       z-index: 5;
-      width: 100%;
       overflow: hidden;
-      flex-shrink: 0;
-      padding: 30px 0 76px;
-      margin-top: 0;
+      pointer-events: none;
+      background: #09123a;
+      /* Top edge fades into hero bg color */
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,1) 60%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,1) 60%);
     }
-    .product-carousel-wrapper::before {
+    .map-peek-svg {
+      width: 100%; height: 100%;
+      opacity: 0.7;
+    }
+    /* Breathing glow overlay */
+    .map-peek-glow {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 25vh;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .map-peek-glow::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(6, 14, 60, 0.4);
-      pointer-events: none;
-      z-index: 8;
+      background: radial-gradient(ellipse 90% 80% at 50% 100%, rgba(18,90,220,0.5) 0%, rgba(100,180,255,0.2) 35%, transparent 65%);
+      animation: breatheA 4s ease-in-out infinite;
     }
-    .product-carousel-title {
+    .map-peek-glow::after {
+      content: '';
       position: absolute;
-      top: 4px;
-      left: 0; right: 0;
-      text-align: center;
-      font-size: 13px;
-      color: rgba(255,255,255,0.9);
-      letter-spacing: 1px;
-      z-index: 10;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(130,200,255,0.35) 0%, rgba(18,90,220,0.15) 40%, transparent 60%);
+      animation: breatheB 4s ease-in-out infinite 2s;
     }
-    .product-carousel-title i { color: var(--sams-orange); font-size: 15px; }
-    .product-track {
-      display: flex;
-      gap: 10px;
-      padding: 4px 0;
-      animation: scrollLeft 35s linear infinite;
-      width: max-content;
+    @keyframes breatheA {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
     }
-    .product-track-reverse {
-      animation-direction: reverse;
-      animation-duration: 40s;
-    }
-    .product-item {
-      flex-shrink: 0;
-      width: 112px; height: 112px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(255,255,255,0.05);
-      opacity: 0.85;
-    }
-    .product-item img {
-      width: 100%; height: 100%;
-      object-fit: cover;
+    @keyframes breatheB {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 0.2; }
     }
 
-    /* Scroll hint - arrow pointing UP for swipe gesture */
+    /* City switcher capsule */
+    .city-switcher-capsule {
+      position: relative;
+      z-index: 20;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      cursor: pointer;
+      width: fit-content;
+      margin-bottom: 14px;
+      transition: background 0.2s;
+    }
+    .city-switcher-capsule:active { background: rgba(255,255,255,0.18); }
+    .city-dot {
+      width: 6px; height: 6px;
+      background: #6dd474;
+      border-radius: 50%;
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(109,212,116,0.5); }
+      50% { opacity: 0.7; box-shadow: 0 0 0 4px rgba(109,212,116,0); }
+    }
+    .city-switcher-capsule .city-name-label {
+      font-size: 13px; font-weight: 700; color: white;
+    }
+    .city-switcher-capsule .city-more {
+      font-size: 11px; color: rgba(255,255,255,0.5);
+    }
+    .city-switcher-capsule .city-arrow {
+      font-size: 14px; color: rgba(255,255,255,0.4);
+      transition: transform 0.3s;
+    }
+
+    /* City drawer overlay */
+    .city-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0,0,0,0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .city-drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .city-drawer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 201;
+      background: #0c1645;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 34px;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .city-drawer.active {
+      transform: translateY(0);
+    }
+    .city-drawer-handle {
+      width: 36px; height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      margin: 10px auto 16px;
+    }
+    .city-drawer-title {
+      padding: 0 20px 14px;
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+    }
+    .city-list {
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .city-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .city-list-item:active { background: rgba(255,255,255,0.06); }
+    .city-list-item.selected {
+      background: rgba(18,90,220,0.2);
+      border: 1px solid rgba(18,90,220,0.4);
+    }
+    .city-list-item .city-item-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #6dd474;
+      flex-shrink: 0;
+    }
+    .city-list-item .city-item-name {
+      flex: 1; font-size: 15px; color: white; font-weight: 500;
+    }
+    .city-list-item .city-item-check {
+      font-size: 16px; color: var(--sams-blue);
+    }
+
+    /* Scroll progress bar */
+    .scroll-progress {
+      position: fixed;
+      top: 56px; right: 0;
+      width: 2px; height: calc(100% - 56px);
+      z-index: 100;
+    }
+    .scroll-progress-fill {
+      width: 100%; height: 0%;
+      background: linear-gradient(to bottom, var(--sams-blue), var(--sams-orange));
+      border-radius: 1px;
+      transition: height 0.1s;
+    }
+
+    /* Scroll hint - fixed above CTA button */
     .scroll-hint {
-      position: absolute;
-      bottom: 18px;
+      position: fixed;
+      bottom: 110px;
       left: 0; right: 0;
-      z-index: 15;
+      z-index: 101;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 5px;
-      /* delayed appearance after entry anim */
       opacity: 0;
       animation: entryFadeIn 0.5s ease 1.8s forwards, hintBounce 2s ease-in-out 2.3s infinite;
+      transition: opacity 0.3s ease;
+    }
+    .scroll-hint.hidden {
+      opacity: 0 !important;
+      animation: none;
     }
     .scroll-hint span {
-      font-size: 11px;
-      color: var(--sams-text-muted);
-      letter-spacing: 1px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(100,180,255,0.5);
+    }
+    .scroll-hint svg {
+      filter: drop-shadow(0 0 4px rgba(100,180,255,0.4));
     }
 
     /* ===== Screen 1 Entry Animations ===== */
@@ -263,10 +393,6 @@
     .hero-content { opacity: 0; transform: translateY(20px); }
     .hero-content.entered {
       animation: contentSlideUp 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.7s forwards;
-    }
-    .product-carousel-wrapper { opacity: 0; }
-    .product-carousel-wrapper.entered {
-      animation: entryFadeIn 0.7s ease 1.3s forwards;
     }
 
     /* ===== Screen 2 staggered fade-in ===== */
@@ -311,13 +437,16 @@
     #screen-2 {
       background: var(--map-blue);
       position: relative;
+      min-height: 100svh;
+      padding-top: 0;
+      padding-bottom: 100px;
     }
-
 
     .map-container {
       position: relative;
       flex: 1;
       overflow: hidden;
+      min-height: 50vh;
     }
 
     /* Grid overlay */
@@ -340,115 +469,6 @@
     }
     .gz-map {
       width: 100%; height: 100%;
-    }
-
-    /* Search bar - 修改3：全圆角 + 白色半透明毛玻璃 */
-    .search-bar-wrapper {
-      position: absolute;
-      top: 14px;
-      left: 14px; right: 14px;
-      z-index: 20;
-    }
-    .search-bar {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(16px) saturate(1.8);
-      -webkit-backdrop-filter: blur(16px) saturate(1.8);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 50px;
-      padding: 11px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-      transition: box-shadow 0.2s;
-    }
-    .search-bar:hover { box-shadow: 0 6px 28px rgba(0,0,0,0.35); }
-    .search-icon { font-size: 16px; flex-shrink: 0; opacity: 0.7; }
-    .search-placeholder {
-      flex: 1;
-      color: rgba(255,255,255,0.7);
-      font-size: 13px;
-    }
-    /* 修改2：定位➜查找 */
-    .search-locate-btn {
-      background: var(--sams-blue);
-      color: white;
-      border: none;
-      border-radius: 30px;
-      padding: 5px 14px;
-      font-size: 12px;
-      cursor: pointer;
-      white-space: nowrap;
-      font-family: inherit;
-      font-weight: 500;
-    }
-
-    /* 修改1：配送结果直接显示在搜索框下方，不用浮层 */
-    .delivery-result-inline {
-      margin-top: 8px;
-      background: rgba(0, 20, 80, 0.75);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(100, 200, 255, 0.2);
-      border-radius: 14px;
-      padding: 10px 16px;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .delivery-result-inline.visible { display: flex; }
-    .delivery-result-inline .result-icon { font-size: 22px; flex-shrink: 0; }
-    .delivery-result-inline .result-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: #6dd474;
-    }
-    .delivery-result-inline .result-sub {
-      font-size: 11px;
-      color: rgba(255,255,255,0.6);
-    }
-
-    /* Pin marker */
-    .map-pin {
-      position: absolute;
-      z-index: 12;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      transform: translate(-50%, -100%);
-      animation: pinDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-    .map-pin.visible { display: flex; }
-    .pin-body {
-      background: var(--sams-blue);
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      width: 28px; height: 28px;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 0 4px rgba(18,90,220,0.25), 0 3px 12px rgba(18,90,220,0.5);
-    }
-    .pin-body::after {
-      content: '';
-      width: 8px; height: 8px;
-      background: white;
-      border-radius: 50%;
-      transform: rotate(45deg);
-    }
-    .pin-shadow {
-      width: 8px; height: 3px;
-      background: rgba(0,0,0,0.25);
-      border-radius: 50%;
-      margin-top: 1px;
-    }
-    .map-pin.visible .pin-body::before {
-      content: '';
-      position: absolute;
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      background: rgba(18,90,220,0.3);
-      animation: radar 1.5s ease-out 0.2s;
     }
 
     /* Manager section - Transparent Layout with 40% White Border */
@@ -495,15 +515,16 @@
     }
     .consult-link:active { transform: scale(0.96); }
 
-    /* 修改4：加入会员按钮改为蓝色 + 毛玻璃 */
+    /* 修改4：加入会员按钮 - 固定在底部 */
     .bottom-cta {
-      position: relative;
-      z-index: 10;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
       padding: 10px 16px 28px;
-      background: rgba(9, 18, 58, 0.8);
+      background: rgba(9, 18, 58, 0.85);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
     .join-member-btn {
       width: 100%;
@@ -529,96 +550,33 @@
     }
     .bottom-sub a span { color: rgba(255,255,255,0.7); text-decoration: underline; }
 
-    /* ===== SEARCH OVERLAY ===== */
-    #search-overlay {
+    /* Fixed bottom glow - breathing effect above CTA */
+    .fixed-bottom-glow {
       position: fixed;
+      bottom: 70px; left: 0; right: 0;
+      height: 80px;
+      z-index: 99;
+      pointer-events: none;
+    }
+    .fixed-bottom-glow::before {
+      content: '';
+      position: absolute;
       inset: 0;
-      z-index: 100;
-      background: rgba(5, 12, 50, 0.95);
-      display: none;
-      flex-direction: column;
-      backdrop-filter: blur(8px);
+      background: radial-gradient(ellipse 90% 100% at 50% 100%, rgba(18,90,220,0.4) 0%, rgba(100,180,255,0.15) 40%, transparent 70%);
+      animation: breatheA 4s ease-in-out infinite;
     }
-    #search-overlay.active { display: flex; }
-    .overlay-header {
-      padding: 16px 16px 12px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-    .overlay-input-wrapper {
-      flex: 1;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(100,150,255,0.35);
-      border-radius: 30px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 14px;
-    }
-    .overlay-input-wrapper input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: white;
-      font-size: 14px;
-      font-family: inherit;
-    }
-    .overlay-input-wrapper input::placeholder { color: rgba(255,255,255,0.35); }
-    /* 修改2：支持清除按钮 */
-    .overlay-clear-btn {
-      background: rgba(255,255,255,0.15);
-      border: none;
-      border-radius: 50%;
-      width: 20px; height: 20px;
-      display: none;
-      align-items: center; justify-content: center;
-      cursor: pointer;
-      color: rgba(255,255,255,0.7);
-      font-size: 12px;
-      flex-shrink: 0;
-      font-family: inherit;
-    }
-    .overlay-clear-btn.visible { display: flex; }
-    .overlay-cancel {
-      background: none; border: none;
-      color: rgba(255,255,255,0.6); font-size: 13px;
-      cursor: pointer; font-family: inherit; padding: 4px 0;
-      flex-shrink: 0;
-    }
-    .suggestions-list {
-      flex: 1; overflow-y: auto; padding: 10px 0;
-    }
-    .suggestion-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 13px 20px;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      transition: background 0.15s;
-    }
-    .suggestion-item:hover, .suggestion-item:active { background: rgba(255,255,255,0.05); }
-    .suggestion-icon { font-size: 16px; flex-shrink: 0; opacity: 0.6; }
-    .suggestion-text { flex: 1; }
-    .suggestion-text .main { font-size: 14px; color: white; margin-bottom: 2px; }
-    .suggestion-text .sub { font-size: 11px; color: rgba(255,255,255,0.4); }
-    .suggestion-tag {
-      display: inline-flex; align-items: center;
-      flex-shrink: 0;
-    }
-    .suggestion-tag img { height: 18px; }
-    .overlay-label {
-      padding: 12px 20px 6px;
-      font-size: 10px; color: rgba(255,255,255,0.3);
-      letter-spacing: 1px; text-transform: uppercase;
+    .fixed-bottom-glow::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(130,200,255,0.3) 0%, rgba(18,90,220,0.1) 45%, transparent 65%);
+      animation: breatheB 4s ease-in-out infinite 2s;
     }
 
+
+
     /* ===== Animations ===== */
-    @keyframes scrollLeft {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
+
     /* Entry animations */
     @keyframes bgFadeIn {
       0% { opacity: 0; transform: scale(1.04); }
@@ -689,55 +647,33 @@
       </div>
     </div>
 
-    <!-- 修改6：去掉门店插画，保留商品流 -->
-    <!-- 修改7：替换为真实商品图 -->
-    <div class="product-carousel-wrapper">
-      <div class="product-carousel-title">
-        会员常购好物
-      </div>
-      <div class="product-track" id="track1">
-        <div class="product-item"><img src="assets/products/Frame 1321316287.png" alt="烘焙乳品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316289.png" alt="萌宠生活"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316289-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316289-2.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316290.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316291.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316292.png" alt="商品"></div>
-        <!-- duplicate for loop -->
-        <div class="product-item"><img src="assets/products/Frame 1321316287.png" alt="烘焙乳品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316289.png" alt="萌宠生活"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316289-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316289-2.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316290.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316291.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316292.png" alt="商品"></div>
-      </div>
-      <div class="product-track product-track-reverse" id="track2">
-        <div class="product-item"><img src="assets/products/Frame 1321316293.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316293-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316294.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316294-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316295.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316295-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316323.png" alt="商品"></div>
-        <!-- duplicate for loop -->
-        <div class="product-item"><img src="assets/products/Frame 1321316293.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316293-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316294.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316294-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316295.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316295-1.png" alt="商品"></div>
-        <div class="product-item"><img src="assets/products/Frame 1321316323.png" alt="商品"></div>
-      </div>
-    </div>
-
-    <!-- Scroll hint - arrow points UP (swipe up gesture) -->
-    <div class="scroll-hint">
-      <svg width="16" height="9" viewBox="0 0 16 9" fill="none">
-        <path d="M1 8L8 1L15 8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+    <!-- Map peek under hero - SVG grid lines preview with breathing glow -->
+    <div class="map-peek">
+      <svg class="map-peek-svg" viewBox="0 0 375 300" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+        <!-- Background matches map area -->
+        <rect width="375" height="300" fill="#09123a"/>
+        <!-- Grid background pattern -->
+        <rect x="0" y="0" width="375" height="300" fill="url(#peekGrid)"/>
+        <defs>
+          <pattern id="peekGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(30,80,200,0.12)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <!-- Main streets -->
+        <rect x="0" y="120" width="375" height="8" fill="#1e50c8" opacity="0.5"/>
+        <rect x="155" y="0" width="8" height="300" fill="#1e50c8" opacity="0.5"/>
+        <rect x="255" y="0" width="6" height="300" fill="#1a3fa0" opacity="0.4"/>
+        <rect x="90" y="0" width="5" height="300" fill="#162e8a" opacity="0.35"/>
+        <rect x="0" y="200" width="375" height="6" fill="#1a3fa0" opacity="0.4"/>
+        <rect x="310" y="0" width="4" height="300" fill="#162e8a" opacity="0.3"/>
+        <rect x="0" y="55" width="375" height="5" fill="#162e8a" opacity="0.3"/>
+        <!-- Delivery zone outline -->
+        <path d="M165 50 L245 50 L258 70 L262 120 L258 190 L245 250 L165 260 L150 230 L148 190 L142 145 L140 120 L148 70 Z" 
+              fill="none" stroke="rgba(255,120,30,0.2)" stroke-width="2" stroke-dasharray="6 4"/>
       </svg>
-      <span>上滑了解配送范围</span>
     </div>
+    <div class="map-peek-glow"></div>
+
   </section>
 
   <!-- ===== SCREEN 2: Map Query ===== -->
@@ -860,29 +796,14 @@
         </svg>
       </div>
 
-      <!-- Map Pin (shown after address selected) -->
-      <div class="map-pin" id="map-pin" style="left: 53%; top: 44%;">
-        <div class="pin-body"></div>
-        <div class="pin-shadow"></div>
-      </div>
+    </div>
 
-      <!-- Search bar + 修改1：结果直接在搜索框下方展示 -->
-      <div class="search-bar-wrapper">
-        <div class="search-bar" id="search-trigger">
-          <i class="ri-search-line search-icon"></i>
-          <span class="search-placeholder" id="search-display-text">输入地址，查看是否支持极速达</span>
-          <!-- 修改2：查找按钮 -->
-          <button class="search-locate-btn" onclick="event.stopPropagation(); handleLocate()">查找</button>
-        </div>
-        <!-- 修改1：结果展示在搜索框正下方 -->
-        <div class="delivery-result-inline" id="delivery-result">
-          <i class="ri-checkbox-circle-fill result-icon" style="color:#6dd474"></i>
-          <div>
-            <div class="result-label">支持极速达配送到家！</div>
-            <div class="result-sub">最快1小时配送到达</div>
-          </div>
-        </div>
-      </div>
+    <!-- City Switcher Capsule -->
+    <div class="city-switcher-capsule s2-fade" id="city-switcher" style="transition-delay:0.4s" onclick="openCityDrawer()">
+      <span class="city-dot"></span>
+      <span class="city-name-label" id="city-label">广州</span>
+      <span class="city-more">· 更多城市开仓中</span>
+      <i class="ri-arrow-down-s-line city-arrow"></i>
     </div>
 
     <!-- Manager section - fade in on screen enter -->
@@ -896,167 +817,106 @@
         立即咨询
       </button>
     </div>
-
-    <!-- Bottom CTA -->
-    <div class="bottom-cta s2-fade" id="s2-cta" style="transition-delay:0.85s">
-      <button class="join-member-btn" onclick="alert('即将跳转入会页面...')">
-        加入山姆会员，领取百元礼包
-      </button>
-      <div class="bottom-sub">
-        <a href="#">通过此链接办卡助分享人赢好礼 <span>活动规则 ›</span></a>
-      </div>
-    </div>
   </section>
 </div>
 
-<!-- ===== SEARCH OVERLAY ===== -->
-<div id="search-overlay">
-  <div class="overlay-header">
-    <div class="overlay-input-wrapper">
-      <i class="ri-search-line" style="color:rgba(255,255,255,0.6)"></i>
-      <input type="text" id="search-input" placeholder="输入广州地址..." autocomplete="off" />
-      <!-- 修改2：清除按钮 -->
-      <button class="overlay-clear-btn" id="clear-btn" onclick="clearSearch()"><i class="ri-close-circle-fill"></i></button>
-    </div>
-    <button class="overlay-cancel" onclick="closeSearch()">取消</button>
-  </div>
-  <p class="overlay-label">广州热门地区</p>
-  <div class="suggestions-list" id="suggestions-list">
-    <!-- Suggestions rendered by JS -->
+<!-- ===== FIXED BOTTOM ELEMENTS ===== -->
+<!-- Scroll hint (above CTA) -->
+<div class="scroll-hint" id="scroll-hint">
+  <svg width="16" height="9" viewBox="0 0 16 9" fill="none">
+    <path d="M1 8L8 1L15 8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+  <span>上滑探索配送范围</span>
+</div>
+
+<!-- Fixed bottom glow -->
+<div class="fixed-bottom-glow" id="fixed-bottom-glow"></div>
+
+<!-- Fixed CTA button -->
+<div class="bottom-cta" id="bottom-cta">
+  <button class="join-member-btn" onclick="alert('即将跳转入会页面...')">
+    加入山姆会员，领取百元礼包
+  </button>
+  <div class="bottom-sub">
+    <a href="#">通过此链接办卡助分享人赢好礼 <span>活动规则 ›</span></a>
   </div>
 </div>
 
+<!-- City Drawer -->
+<div class="city-drawer-overlay" id="city-drawer-overlay" onclick="closeCityDrawer()"></div>
+<div class="city-drawer" id="city-drawer">
+  <div class="city-drawer-handle"></div>
+  <div class="city-drawer-title">极速达开仓城市</div>
+  <div class="city-list" id="city-list">
+    <!-- rendered by JS -->
+  </div>
+</div>
+
+<!-- Scroll progress bar -->
+<div class="scroll-progress"><div class="scroll-progress-fill" id="scroll-progress-fill"></div></div>
+
 <script>
-  // ===== Address Data (Guangzhou) =====
-  const GZ_ADDRESSES = [
-    { main: "天河区体育西路", sub: "广州市天河区", supported: true },
-    { main: "天河区珠江新城花城广场", sub: "广州市天河区", supported: true },
-    { main: "天河区正佳广场", sub: "广州市天河区天河路228号", supported: true },
-    { main: "天河区林和西路", sub: "广州市天河区", supported: true },
-    { main: "天河区石牌村", sub: "广州市天河区", supported: true },
-    { main: "天河区天河北路", sub: "广州市天河区", supported: true },
-    { main: "天河区中山大道西", sub: "广州市天河区", supported: true },
-    { main: "越秀区北京路步行街", sub: "广州市越秀区", supported: false },
-    { main: "海珠区南洲路", sub: "广州市海珠区", supported: false },
-    { main: "番禺区大学城", sub: "广州市番禺区", supported: false },
-    { main: "白云区机场路", sub: "广州市白云区", supported: false },
-    { main: "黄埔区科学城", sub: "广州市黄埔区", supported: false },
-    { main: "荔湾区上下九步行街", sub: "广州市荔湾区", supported: false },
+  // ===== City Data =====
+  const CITIES = [
+    { name: '广州', active: true },
+    { name: '深圳', active: true },
+    { name: '上海', active: true },
+    { name: '北京', active: true },
+    { name: '杭州', active: true },
+    { name: '成都', active: true },
+    { name: '武汉', active: true },
+    { name: '南京', active: true },
   ];
-
-  let selectedAddress = null;
-
-  // ===== Search Overlay Logic =====
-  document.getElementById('search-trigger').addEventListener('click', openSearch);
-
-  function openSearch() {
-    document.getElementById('search-overlay').classList.add('active');
-    setTimeout(() => document.getElementById('search-input').focus(), 100);
-    renderSuggestions(GZ_ADDRESSES);
-  }
-
-  function closeSearch() {
-    document.getElementById('search-overlay').classList.remove('active');
-    document.getElementById('search-input').value = '';
-    document.getElementById('clear-btn').classList.remove('visible');
-    renderSuggestions(GZ_ADDRESSES);
-  }
-
-  // 修改2：清除搜索内容
-  function clearSearch() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('clear-btn').classList.remove('visible');
-    renderSuggestions(GZ_ADDRESSES);
-    document.getElementById('search-input').focus();
-  }
-
-  document.getElementById('search-input').addEventListener('input', function() {
-    const val = this.value.trim();
-    // 修改2：有内容时显示清除按钮
-    if (val) {
-      document.getElementById('clear-btn').classList.add('visible');
-    } else {
-      document.getElementById('clear-btn').classList.remove('visible');
-    }
-    if (!val) { renderSuggestions(GZ_ADDRESSES); return; }
-    const filtered = GZ_ADDRESSES.filter(a => a.main.includes(val) || a.sub.includes(val));
-    const custom = [{ main: val + " (广州)", sub: "广州市内地址", supported: true }, ...filtered];
-    renderSuggestions(custom.slice(0, 8));
-  });
-
-  function renderSuggestions(list) {
-    const container = document.getElementById('suggestions-list');
-    container.innerHTML = '';
-    if (list.length === 0) {
-      container.innerHTML = '<div style="padding:40px 20px; text-align:center; color:rgba(255,255,255,0.3); font-size:14px;">未找到匹配地址</div>';
-      return;
-    }
-    list.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'suggestion-item';
-      div.innerHTML = `
-        <i class="ri-map-pin-2-line suggestion-icon"></i>
-        <div class="suggestion-text">
-          <div class="main">${item.main}</div>
-          <div class="sub">${item.sub}</div>
-        </div>
-        ${item.supported ? '<span class="suggestion-tag"><img src="assets/express_tag.svg" alt="极速达" /></span>' : ''}
-      `;
-      div.addEventListener('click', () => selectAddress(item));
-      container.appendChild(div);
-    });
-  }
-
-  function selectAddress(item) {
-    selectedAddress = item;
-    // 修改2：搜索框只显示地址名，不重复
-    document.getElementById('search-display-text').textContent = item.main;
-    document.getElementById('search-display-text').style.color = 'rgba(255,255,255,0.9)';
-    closeSearch();
-    showResult(item);
-  }
-
-  function showResult(item) {
-    // 修改1：结果卡显示在搜索框下方（不用浮层）
-    const result = document.getElementById('delivery-result');
-    result.classList.remove('visible');
-    void result.offsetWidth;
-    result.classList.add('visible');
-
-    // Show pin on map
-    const pin = document.getElementById('map-pin');
-    pin.classList.remove('visible');
-    void pin.offsetWidth;
-    // Position pin near Henghe hotel area with slight randomization
-    const baseLeft = 51 + (Math.random() * 6 - 3);
-    const baseTop = 42 + (Math.random() * 6 - 3);
-    pin.style.left = baseLeft + '%';
-    pin.style.top = baseTop + '%';
-    setTimeout(() => pin.classList.add('visible'), 80);
-  }
-
-  function handleLocate() {
-    const gpsAddr = { main: "天河区恒和酒店附近", sub: "广州市天河区", supported: true };
-    document.getElementById('search-display-text').textContent = gpsAddr.main;
-    document.getElementById('search-display-text').style.color = 'rgba(255,255,255,0.9)';
-    showResult(gpsAddr);
-  }
-
-  // ===== Init =====
-  renderSuggestions(GZ_ADDRESSES);
+  let currentCity = '广州';
 
   // ===== Screen 1 entry animation =====
   (function initScreen1() {
     const heroBg = document.querySelector('.hero-bg');
     const heroContent = document.querySelector('.hero-content');
-    const carousel = document.querySelector('.product-carousel-wrapper');
-    // Trigger staggered entry
     requestAnimationFrame(() => {
       heroBg.classList.add('entered');
       setTimeout(() => heroContent.classList.add('entered'), 50);
-      setTimeout(() => carousel.classList.add('entered'), 100);
     });
   })();
+
+  // ===== Scroll-driven parallax =====
+  const heroContent = document.querySelector('.hero-content');
+  const heroBg = document.querySelector('.hero-bg');
+  const scrollHint = document.querySelector('.scroll-hint');
+  const progressFill = document.getElementById('scroll-progress-fill');
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const vh = window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight - vh;
+
+    // Progress bar
+    if (progressFill) {
+      const pct = Math.min(scrollY / docHeight * 100, 100);
+      progressFill.style.height = pct + '%';
+    }
+
+    // Hero parallax: content fades out and moves up as you scroll
+    if (heroContent) {
+      const progress = Math.min(scrollY / (vh * 0.5), 1);
+      heroContent.style.opacity = 1 - progress;
+      heroContent.style.transform = `translateY(${-scrollY * 0.3}px)`;
+    }
+
+    // Hero bg parallax (slower)
+    if (heroBg) {
+      heroBg.style.transform = `translateY(${-scrollY * 0.15}px)`;
+    }
+
+    // Hide scroll hint when user starts scrolling
+    if (scrollHint) {
+      if (scrollY > vh * 0.08) {
+        scrollHint.classList.add('hidden');
+      } else {
+        scrollHint.classList.remove('hidden');
+      }
+    }
+  });
 
   // ===== Screen 2 entry animation via IntersectionObserver =====
   let screen2Animated = false;
@@ -1077,21 +937,83 @@
           glow && glow.classList.add('draw');
           zoneText && zoneText.classList.add('draw');
         }, 200);
-        // Staggered fade-in for search bar and lower elements
-        const searchWrapper = document.querySelector('.search-bar-wrapper');
+        // Staggered fade-in for city switcher and lower elements
+        const citySwitcher = document.getElementById('city-switcher');
         const manager = document.getElementById('s2-manager');
-        const cta = document.getElementById('s2-cta');
-        setTimeout(() => searchWrapper && searchWrapper.classList.add('visible'), 100);
+        setTimeout(() => citySwitcher && citySwitcher.classList.add('visible'), 400);
         setTimeout(() => manager && manager.classList.add('visible'), 600);
-        setTimeout(() => cta && cta.classList.add('visible'), 850);
       }
     });
-  }, { threshold: 0.5 });
+  }, { threshold: 0.3 });
 
   observer.observe(screen2);
 
-  // ===== Also make search-bar-wrapper a fade element =====
-  document.querySelector('.search-bar-wrapper').classList.add('s2-fade');
+
+
+  // ===== City Drawer Logic =====
+  function openCityDrawer() {
+    document.getElementById('city-drawer-overlay').classList.add('active');
+    document.getElementById('city-drawer').classList.add('active');
+    renderCityList();
+  }
+
+  function closeCityDrawer() {
+    document.getElementById('city-drawer-overlay').classList.remove('active');
+    document.getElementById('city-drawer').classList.remove('active');
+  }
+
+  function renderCityList() {
+    const container = document.getElementById('city-list');
+    container.innerHTML = '';
+    CITIES.forEach(city => {
+      const div = document.createElement('div');
+      div.className = 'city-list-item' + (city.name === currentCity ? ' selected' : '');
+      div.innerHTML = `
+        <span class="city-item-dot"></span>
+        <span class="city-item-name">${city.name}</span>
+        ${city.name === currentCity ? '<i class="ri-check-line city-item-check"></i>' : ''}
+      `;
+      div.addEventListener('click', () => switchCity(city.name));
+      container.appendChild(div);
+    });
+  }
+
+  function switchCity(cityName) {
+    if (cityName === currentCity) { closeCityDrawer(); return; }
+    currentCity = cityName;
+
+    // Update city label
+    document.getElementById('city-label').textContent = cityName;
+
+    // Update hero title city name
+    const heroCity = document.querySelector('.hero-title .city-name');
+    if (heroCity) heroCity.textContent = cityName;
+
+    // Map transition animation
+    const mapContainer = document.querySelector('.map-container');
+    mapContainer.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+    mapContainer.style.transform = 'scale(0.95)';
+    mapContainer.style.opacity = '0.3';
+    setTimeout(() => {
+      // Reset animation for delivery zone
+      screen2Animated = false;
+      const fill = document.querySelector('.delivery-zone-fill');
+      const border = document.querySelector('.delivery-zone-path');
+      const glow = document.querySelector('.delivery-zone-glow');
+      const zoneText = document.querySelector('.delivery-zone-text');
+      [fill, border, glow, zoneText].forEach(el => el && el.classList.remove('draw'));
+
+      mapContainer.style.transform = 'scale(1)';
+      mapContainer.style.opacity = '1';
+
+      // Re-trigger zone draw animation
+      setTimeout(() => {
+        [fill, border, glow, zoneText].forEach(el => el && el.classList.add('draw'));
+      }, 300);
+    }, 400);
+
+    closeCityDrawer();
+  }
 
 </script>
 </body>
