@@ -76,8 +76,7 @@
     }
     .hero-bg {
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 80%;
+      inset: 0;
       z-index: 0;
       overflow: hidden;
     }
@@ -87,7 +86,7 @@
       object-position: center top;
       opacity: 0.55;
     }
-    /* dark overlay + bottom fade to screen bg color */
+    /* dark overlay + bottom fade to hide image and blend with map */
     .hero-bg::after {
       content: '';
       position: absolute;
@@ -96,9 +95,9 @@
         180deg,
         rgba(6,14,60,0.6) 0%,
         rgba(6,14,60,0.25) 35%,
-        rgba(6,14,60,0.3) 60%,
-        rgba(6,14,60,0.7) 85%,
-        #060e3c 100%
+        rgba(6,14,60,0.4) 60%,
+        rgba(6,14,60,0.95) 80%,
+        #09123a 100%
       );
     }
 
@@ -178,45 +177,6 @@
     }
     .hero-tag i { font-size: 14px; opacity: 1; text-shadow: none; color: white; }
 
-    /* Map peek at bottom of hero - directly shows the map */
-    .map-peek {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 25vh;
-      z-index: 5;
-      overflow: hidden;
-      pointer-events: none;
-      background: #09123a;
-      /* Top edge fades into hero bg color */
-      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,1) 60%);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 35%, rgba(0,0,0,1) 60%);
-    }
-    .map-peek-svg {
-      width: 100%; height: 100%;
-      opacity: 0.7;
-    }
-    /* Breathing glow overlay */
-    .map-peek-glow {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 25vh;
-      z-index: 6;
-      pointer-events: none;
-    }
-    .map-peek-glow::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 90% 80% at 50% 100%, rgba(18,90,220,0.5) 0%, rgba(100,180,255,0.2) 35%, transparent 65%);
-      animation: breatheA 4s ease-in-out infinite;
-    }
-    .map-peek-glow::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(130,200,255,0.35) 0%, rgba(18,90,220,0.15) 40%, transparent 60%);
-      animation: breatheB 4s ease-in-out infinite 2s;
-    }
     @keyframes breatheA {
       0%, 100% { opacity: 0.4; }
       50% { opacity: 1; }
@@ -359,7 +319,7 @@
     /* Scroll hint - fixed above CTA button */
     .scroll-hint {
       position: fixed;
-      bottom: 110px;
+      bottom: 160px;
       left: 0; right: 0;
       z-index: 101;
       display: flex;
@@ -435,18 +395,26 @@
 
     /* ===== SCREEN 2: Map Query ===== */
     #screen-2 {
-      background: var(--map-blue);
+      background: transparent;
       position: relative;
       min-height: 100svh;
       padding-top: 0;
-      padding-bottom: 100px;
+      padding-bottom: 140px;
+      margin-top: -20vh; /* 拉升20vh使其进入第一屏可视区 */
+      z-index: 5;
+      pointer-events: none;
+    }
+    #screen-2 > * {
+      pointer-events: auto;
     }
 
     .map-container {
+      width: 100vw;
+      height: 70vh;
       position: relative;
-      flex: 1;
-      overflow: hidden;
-      min-height: 50vh;
+      /* 使地图顶部平滑渐变，无硬边地混入星空背景 */
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,1) 40%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.5) 15%, rgba(0,0,0,1) 40%);
     }
 
     /* Grid overlay */
@@ -520,11 +488,39 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       z-index: 100;
-      padding: 10px 16px 28px;
-      background: rgba(9, 18, 58, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 0px 16px 34px;
+      /* 移除实色和border，只保留按钮本身的样式 */
+      background: transparent;
+      pointer-events: none;
+      /* Entry animation: slide up + fade in */
+      opacity: 0;
+      transform: translateY(30px);
+      animation: ctaSlideIn 0.6s ease 1.5s forwards;
+    }
+    .bottom-cta > * {
+      pointer-events: auto;
+    }
+    @keyframes ctaSlideIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .cta-glow {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 280px;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .cta-glow::before, .cta-glow::after {
+      content: ''; position: absolute; inset: 0;
+    }
+    .cta-glow::before {
+      background: radial-gradient(ellipse 120% 100% at 50% 100%, rgba(18,90,220,0.5) 0%, rgba(100,180,255,0.2) 50%, transparent 80%);
+      animation: breatheA 4s ease-in-out infinite;
+    }
+    .cta-glow::after {
+      background: radial-gradient(ellipse 100% 90% at 50% 100%, rgba(130,200,255,0.4) 0%, rgba(18,90,220,0.15) 50%, transparent 75%);
+      animation: breatheB 4s ease-in-out infinite 2s;
     }
     .join-member-btn {
       width: 100%;
@@ -550,28 +546,7 @@
     }
     .bottom-sub a span { color: rgba(255,255,255,0.7); text-decoration: underline; }
 
-    /* Fixed bottom glow - breathing effect above CTA */
-    .fixed-bottom-glow {
-      position: fixed;
-      bottom: 70px; left: 0; right: 0;
-      height: 80px;
-      z-index: 99;
-      pointer-events: none;
-    }
-    .fixed-bottom-glow::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 90% 100% at 50% 100%, rgba(18,90,220,0.4) 0%, rgba(100,180,255,0.15) 40%, transparent 70%);
-      animation: breatheA 4s ease-in-out infinite;
-    }
-    .fixed-bottom-glow::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(130,200,255,0.3) 0%, rgba(18,90,220,0.1) 45%, transparent 65%);
-      animation: breatheB 4s ease-in-out infinite 2s;
-    }
+
 
 
 
@@ -647,32 +622,6 @@
       </div>
     </div>
 
-    <!-- Map peek under hero - SVG grid lines preview with breathing glow -->
-    <div class="map-peek">
-      <svg class="map-peek-svg" viewBox="0 0 375 300" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
-        <!-- Background matches map area -->
-        <rect width="375" height="300" fill="#09123a"/>
-        <!-- Grid background pattern -->
-        <rect x="0" y="0" width="375" height="300" fill="url(#peekGrid)"/>
-        <defs>
-          <pattern id="peekGrid" width="50" height="50" patternUnits="userSpaceOnUse">
-            <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(30,80,200,0.12)" stroke-width="1"/>
-          </pattern>
-        </defs>
-        <!-- Main streets -->
-        <rect x="0" y="120" width="375" height="8" fill="#1e50c8" opacity="0.5"/>
-        <rect x="155" y="0" width="8" height="300" fill="#1e50c8" opacity="0.5"/>
-        <rect x="255" y="0" width="6" height="300" fill="#1a3fa0" opacity="0.4"/>
-        <rect x="90" y="0" width="5" height="300" fill="#162e8a" opacity="0.35"/>
-        <rect x="0" y="200" width="375" height="6" fill="#1a3fa0" opacity="0.4"/>
-        <rect x="310" y="0" width="4" height="300" fill="#162e8a" opacity="0.3"/>
-        <rect x="0" y="55" width="375" height="5" fill="#162e8a" opacity="0.3"/>
-        <!-- Delivery zone outline -->
-        <path d="M165 50 L245 50 L258 70 L262 120 L258 190 L245 250 L165 260 L150 230 L148 190 L142 145 L140 120 L148 70 Z" 
-              fill="none" stroke="rgba(255,120,30,0.2)" stroke-width="2" stroke-dasharray="6 4"/>
-      </svg>
-    </div>
-    <div class="map-peek-glow"></div>
 
   </section>
 
@@ -685,8 +634,7 @@
       <!-- 修改9：以广州恒和酒店为圆心，约1km比例尺的街道级地图 -->
       <div class="map-bg">
         <svg class="gz-map" viewBox="0 0 375 520" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Background -->
-          <rect width="375" height="520" fill="#09123a"/>
+          <!-- Background removed so body #09123a / hero gradient shows through -->
 
           <!-- Water bodies (Pearl River branch near Tianhe) -->
           <path d="M0 420 Q60 410 120 418 Q180 425 240 415 Q300 405 375 412 L375 440 Q310 432 250 440 Q190 448 130 440 Q70 432 0 445 Z"
@@ -779,9 +727,6 @@
             <text x="200" y="248" font-size="12" fill="#fff" font-family="sans-serif" font-weight="700" text-anchor="middle">新配送范围</text>
           </g>
 
-          <!-- Legend -->
-          <rect x="108" y="483" width="10" height="10" rx="2" fill="rgba(255,120,30,0.5)" stroke="#FF7820" stroke-width="1"/>
-          <text x="122" y="492" font-size="9" fill="rgba(255,180,80,0.8)" font-family="sans-serif">极速达覆盖区域</text>
 
           <!-- Glow filter -->
           <defs>
@@ -826,14 +771,12 @@
   <svg width="16" height="9" viewBox="0 0 16 9" fill="none">
     <path d="M1 8L8 1L15 8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
   </svg>
-  <span>上滑探索配送范围</span>
+  <span>上划探索配送范围</span>
 </div>
-
-<!-- Fixed bottom glow -->
-<div class="fixed-bottom-glow" id="fixed-bottom-glow"></div>
 
 <!-- Fixed CTA button -->
 <div class="bottom-cta" id="bottom-cta">
+  <div class="cta-glow"></div>
   <button class="join-member-btn" onclick="alert('即将跳转入会页面...')">
     加入山姆会员，领取百元礼包
   </button>
@@ -876,6 +819,13 @@
     requestAnimationFrame(() => {
       heroBg.classList.add('entered');
       setTimeout(() => heroContent.classList.add('entered'), 50);
+
+      // Auto scroll to show map after initial animation completes
+      setTimeout(() => {
+        // Scroll to the very bottom to ensure city switcher and manager card 
+        // sit perfectly right above the fixed CTA button
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 3000);
     });
   })();
 
@@ -944,7 +894,7 @@
         setTimeout(() => manager && manager.classList.add('visible'), 600);
       }
     });
-  }, { threshold: 0.3 });
+  }, { threshold: 0.65 });
 
   observer.observe(screen2);
 
